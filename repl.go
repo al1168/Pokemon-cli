@@ -5,7 +5,7 @@ import (
 	"strings"
 	"bufio"
 	"os"
-	"Pokemon-cli/pokeapi"
+	"github.com/al1168/Pokemon-cli/internal/pokeapi"
 )
 
 type cliCommand struct{
@@ -35,7 +35,7 @@ exit: Exit the Pokedex
 return nil
 }
 func commandMap(c *config )error{
-	pokeCalls.getPokemonLocation(c)
+	pokeapi.GetPokemonLocation(c.offset)
 	return nil
 }
 func startRepl(){
@@ -51,6 +51,16 @@ func startRepl(){
 			description: "Print help menu",
 			callback: commandHelp,
 		},
+		"map": {
+			name: "map",
+			description: "Get the next 10 Pokemon locations",
+			callback: commandMap,
+		},
+		"mapb": {
+			name: "mapb",
+			description: "Get the prev 10 Pokemon locations",
+			callback: commandMap,
+		},
 	}
 	startingOffset := 0
 	for {
@@ -62,21 +72,30 @@ func startRepl(){
 			continue
 		}
 		firstWord := cleanedInput[0]
+		fmt.Printf("First word is: %v\n", firstWord)
 		if _, ok := cliCommandMap[firstWord]; !ok{
 			fmt.Printf("Command %v not found in Map", firstWord)
 			continue
 		}
+		
 		command := cliCommandMap[firstWord]
 		callback := command.callback
 		myConfig := config{
 			offset: startingOffset,
 		}
-		if command.name == "bmap"{
-			startingOffset = max(0, startingOffset - 10)
+
+		if command.name == "mapb"{
+			if startingOffset == 0{
+				fmt.Print("you're on the first page")
+				continue
+			}
+			startingOffset = max(0, startingOffset - 40)
+			fmt.Printf("%v",startingOffset)
+			myConfig.offset = startingOffset
 		}
 		callback(&myConfig)
 		if command.name == "map"{
-			startingOffset += 10
+			startingOffset += 20
 		}
 
 	}
