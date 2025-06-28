@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"os"
 	"github.com/al1168/Pokemon-cli/internal/pokeapi"
+	"time"
 )
 
 type cliCommand struct{
@@ -15,7 +16,9 @@ type cliCommand struct{
 }
 
 type config struct{
-	offset int
+	pokemonapiClient pokeapi.Client
+	nextURL *string
+	prevUrl *string
 }
 
 func commandExit(*config) error{
@@ -34,10 +37,7 @@ exit: Exit the Pokedex
 `)
 return nil
 }
-func commandMap(c *config )error{
-	pokeapi.GetPokemonLocation(c.offset)
-	return nil
-}
+
 func startRepl(){
 	scanner := bufio.NewScanner(os.Stdin)
 	cliCommandMap:= map[string]cliCommand{
@@ -54,15 +54,17 @@ func startRepl(){
 		"map": {
 			name: "map",
 			description: "Get the next 10 Pokemon locations",
-			callback: commandMap,
+			callback: MapCommand,
 		},
 		"mapb": {
 			name: "mapb",
 			description: "Get the prev 10 Pokemon locations",
-			callback: commandMap,
+			callback: MapCommandB,
 		},
 	}
-	startingOffset := 0
+	myConfig := config{
+			pokemonapiClient: pokeapi.NewClient(5 * time.Second),
+		}
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
@@ -80,24 +82,11 @@ func startRepl(){
 		
 		command := cliCommandMap[firstWord]
 		callback := command.callback
-		myConfig := config{
-			offset: startingOffset,
+		err := callback(&myConfig)
+		if err != nil{
+			// fmt.Errorf("there has been an err, %v", err)
+			fmt.Printf("An error occured %v", err)
 		}
-
-		if command.name == "mapb"{
-			if startingOffset == 0{
-				fmt.Print("you're on the first page")
-				continue
-			}
-			startingOffset = max(0, startingOffset - 40)
-			fmt.Printf("%v",startingOffset)
-			myConfig.offset = startingOffset
-		}
-		callback(&myConfig)
-		if command.name == "map"{
-			startingOffset += 20
-		}
-
 	}
 }
 func cleanInput(text string) []string {
