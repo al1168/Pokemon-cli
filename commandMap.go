@@ -1,0 +1,20 @@
+package main
+
+import (
+	"fmt"
+	// "net/http"
+)
+func MapCommand(c *config) error{
+	client := c.pokemonapiClient
+	responseLoc, err := client.ListLocations(c.nextURL)
+	if err != nil{
+		return fmt.Errorf("failed to get loc structd from ListLocations, error: %v", err)
+	}
+	
+	for _, result := range responseLoc.Results{
+		fmt.Printf("%v \n", result.Name)
+	}
+	c.nextURL = &responseLoc.Next
+	c.prevUrl = &responseLoc.Previous
+	return nil
+}
