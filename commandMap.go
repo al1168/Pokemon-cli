@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	// "net/http"
+	"github.com/al1168/Pokemon-cli/internal/pokecache"
 )
-func MapCommand(c *config) error{
+func MapCommand(c *config, cache *pokecache.Cache) error{
 	client := c.pokemonapiClient
-	responseLoc, err := client.ListLocations(c.nextURL)
+	
+	responseLoc, err := client.ListLocations(c.nextURL, cache)
 	if err != nil{
 		return fmt.Errorf("failed to get loc structd from ListLocations, error: %v", err)
 	}

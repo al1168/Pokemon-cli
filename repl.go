@@ -6,13 +6,14 @@ import (
 	"bufio"
 	"os"
 	"github.com/al1168/Pokemon-cli/internal/pokeapi"
+	"github.com/al1168/Pokemon-cli/internal/pokecache"
 	"time"
 )
 
 type cliCommand struct{
 	name string 
 	description string
-	callback func(*config) error
+	callback func(*config, *pokecache.Cache) error
 }
 
 type config struct{
@@ -21,13 +22,13 @@ type config struct{
 	prevUrl *string
 }
 
-func commandExit(*config) error{
+func commandExit(*config, *pokecache.Cache) error{
 	fmt.Print("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(*config) error{
+func commandHelp(*config, *pokecache.Cache) error{
 	fmt.Print(
 `Welcome to the Pokedex!
 Usage:
@@ -39,7 +40,10 @@ return nil
 }
 
 func startRepl(){
+	cache := pokecache.NewCache(time.Second*10)
 	scanner := bufio.NewScanner(os.Stdin)
+	// run process to clean out cache
+	// go
 	cliCommandMap:= map[string]cliCommand{
 		"exit" : {
 			name: "exit",
@@ -82,12 +86,11 @@ func startRepl(){
 		
 		command := cliCommandMap[firstWord]
 		callback := command.callback
-		err := callback(&myConfig)
+		err := callback(&myConfig, &cache)
 		if err != nil{
-			// fmt.Errorf("there has been an err, %v", err)
 			fmt.Printf("An error occured %v", err)
-		}
-	}
+		} 
+	} 
 }
 func cleanInput(text string) []string {
 

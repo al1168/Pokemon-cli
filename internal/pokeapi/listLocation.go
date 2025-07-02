@@ -1,10 +1,13 @@
 package pokeapi
+
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"encoding/json"
+	"github.com/al1168/Pokemon-cli/internal/pokecache"
+	"io"
 )
-func (c *Client) ListLocations(pageUrl *string) (PokemonLocationStruct, error){
+func (c *Client) ListLocations(pageUrl *string, cache *pokecache.Cache) (PokemonLocationStruct, error){
 	// nextUrl := c.nextURL
 	url := BASE_URL + "/location-area"
 	if pageUrl != nil {
@@ -18,12 +21,14 @@ func (c *Client) ListLocations(pageUrl *string) (PokemonLocationStruct, error){
 	if error!= nil{
 		return PokemonLocationStruct{}, fmt.Errorf("error Making request, %v", error)
 	}
-	decoder := json.NewDecoder(responsObject.Body)
+	data, err := io.ReadAll(responsObject.Body)
+	if err != nil {
+		return PokemonLocationStruct{}, fmt.Errorf("fail to ioRead data, %v", err)
+	}
 	var locationObj PokemonLocationStruct
-	err = decoder.Decode(&locationObj)
+	err = json.Unmarshal(data,&locationObj)
 	if err != nil{
 		return PokemonLocationStruct{}, fmt.Errorf("fail to decode to struct, %v", err)
 	}
-
 	return locationObj, nil
 }
