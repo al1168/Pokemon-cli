@@ -11,6 +11,11 @@ import (
 
 func MapCommandB(c *config, cache *pokecache.Cache) error{
 	client := c.pokemonapiClient
+
+	if c.prevUrl == nil || *c.prevUrl == "" {
+		fmt.Print("We cannot go back any further\n")
+		return nil
+	}
 	responseLoc, err := client.ListLocations(c.prevUrl, cache)
 	if err != nil{
 		return fmt.Errorf("failed to get loc structd from ListLocations, error: %v", err)
