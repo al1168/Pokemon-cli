@@ -30,5 +30,6 @@ func (c *Client) ListLocations(pageUrl *string, cache *pokecache.Cache) (Pokemon
 	if err != nil{
 		return PokemonLocationStruct{}, fmt.Errorf("fail to decode to struct, %v", err)
 	}
+	cache.Add(url, data)
 	return locationObj, nil
 }

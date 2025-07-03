@@ -18,8 +18,12 @@ func NewCache(duration time.Duration) Cache{
 		structure: make(map[string]CacheEntry),
 	}
 	generatedCache.interval = duration
+	go generatedCache.reapLoop()
 	return generatedCache
 }
+// func (c *Cache) Delete(url string) error {
+// 	c.
+// }
 func (c *Cache) Add(url string, data []byte) error{
 	if url == "" || data == nil{
 		return fmt.Errorf("failed caching: Url: %v \n data: %v", url, data)
@@ -50,8 +54,38 @@ This makes sure that the cache doesn't grow too large over time.
 For example, if the interval is 5 seconds, and an entry was added 7 seconds ago,
  that entry should be removed.
 */
-// func (c *Cache) reapLoop(){
-// 	ticker := time.NewTicker(c.interval)
+func (c *Cache) reapLoop(){
+
+	ticker := time.NewTicker(c.interval)
+	defer ticker.Stop()
+	done := make(chan bool)
+
+	for{
+		select{
+			case <-done:
+				return
+			case <-ticker.C:
+				toDelete := make([]string, len(c.structure))
+				currentTime := time.Now()
+				fmt.Printf("currentTime: %v", currentTime)
+				keys := make([]string, 0, len(c.structure))
+				for key := range c.structure {
+					keys = append(keys, key)
+				}
+				fmt.Println(keys)
+				fmt.Println()
+				for key, cacheEntryStruct := range c.structure{
+					if  currentTime.Sub(cacheEntryStruct.createdAt)  > c.interval{
+						toDelete = append(toDelete, key)
+					}
+				for _, key := range toDelete{
+					delete(c.structure, key)
+				}
+			}
+		}
+	}
+	
+}
 // 	// for i := 0 ; i++ {
 
 // 	// }
