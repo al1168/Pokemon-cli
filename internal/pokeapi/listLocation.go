@@ -4,14 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"github.com/al1168/Pokemon-cli/internal/pokecache"
 	"io"
 )
-func (c *Client) ListLocations(pageUrl *string, cache *pokecache.Cache) (PokemonLocationStruct, error){
-	// nextUrl := c.nextURL
+func (c *Client) ListLocations(pageUrl *string) (PokemonLocationStruct, error){
+	cache := c.cache
+	var locationObj PokemonLocationStruct
 	url := BASE_URL + "/location-area"
 	if pageUrl != nil {
 		url = *pageUrl
+	}
+	cacheValue, isInCache, _ := cache.Get(url)
+	var err error 
+	// if in cache return cached item
+	if isInCache {
+		err = json.Unmarshal(cacheValue, &locationObj)
+		if err != nil {
+			return PokemonLocationStruct{}, fmt.Errorf("error with unmarshaling cache item request: %v", err)
+		}
+		return locationObj, nil
 	}
 	newRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil{
@@ -25,8 +35,8 @@ func (c *Client) ListLocations(pageUrl *string, cache *pokecache.Cache) (Pokemon
 	if err != nil {
 		return PokemonLocationStruct{}, fmt.Errorf("fail to ioRead data, %v", err)
 	}
-	var locationObj PokemonLocationStruct
-	err = json.Unmarshal(data,&locationObj)
+	
+	err = json.Unmarshal(data, &locationObj)
 	if err != nil{
 		return PokemonLocationStruct{}, fmt.Errorf("fail to decode to struct, %v", err)
 	}

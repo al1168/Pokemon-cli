@@ -6,14 +6,13 @@ import (
 	"bufio"
 	"os"
 	"github.com/al1168/Pokemon-cli/internal/pokeapi"
-	"github.com/al1168/Pokemon-cli/internal/pokecache"
 	"time"
 )
 
 type cliCommand struct{
 	name string 
 	description string
-	callback func(*config, *pokecache.Cache) error
+	callback func(*config) error
 }
 
 type config struct{
@@ -22,13 +21,13 @@ type config struct{
 	prevUrl *string
 }
 
-func commandExit(*config, *pokecache.Cache) error{
+func commandExit(*config) error{
 	fmt.Print("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(*config, *pokecache.Cache) error{
+func commandHelp(*config) error{
 	fmt.Print(
 `Welcome to the Pokedex!
 Usage:
@@ -40,7 +39,6 @@ return nil
 }
 
 func startRepl(){
-	cache := pokecache.NewCache(time.Second*10)
 	scanner := bufio.NewScanner(os.Stdin)
 	// run process to clean out cache
 	// go
@@ -67,7 +65,7 @@ func startRepl(){
 		},
 	}
 	myConfig := config{
-			pokemonapiClient: pokeapi.NewClient(5 * time.Second),
+			pokemonapiClient: pokeapi.NewClient(5 * time.Second, 10 *time.Second),
 		}
 	for {
 		fmt.Print("Pokedex > ")
@@ -86,7 +84,7 @@ func startRepl(){
 		
 		command := cliCommandMap[firstWord]
 		callback := command.callback
-		err := callback(&myConfig, &cache)
+		err := callback(&myConfig)
 		if err != nil{
 			fmt.Printf("An error occured %v", err)
 		} 

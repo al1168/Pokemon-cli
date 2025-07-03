@@ -2,8 +2,8 @@ package pokecache
 
 import (
 	"fmt"
-	// "structs"
 	"time"
+	"sync"
 )
 type CacheEntry struct {
 	data []byte
@@ -12,19 +12,21 @@ type CacheEntry struct {
 type Cache struct{
 	structure map[string]CacheEntry
 	interval time.Duration
+	mux *sync.Mutex
 }
 func NewCache(duration time.Duration) Cache{
 	generatedCache := Cache{
 		structure: make(map[string]CacheEntry),
+		mux : &sync.Mutex{},
 	}
 	generatedCache.interval = duration
 	go generatedCache.reapLoop()
 	return generatedCache
 }
-// func (c *Cache) Delete(url string) error {
-// 	c.
-// }
+
 func (c *Cache) Add(url string, data []byte) error{
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	if url == "" || data == nil{
 		return fmt.Errorf("failed caching: Url: %v \n data: %v", url, data)
 	}
@@ -37,7 +39,8 @@ func (c *Cache) Add(url string, data []byte) error{
 }
 
 func (c *Cache) Get(url string) ([]byte, bool, error){
-	
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	val, ok := c.structure[url]
 	if !ok {
 		return nil, false, fmt.Errorf("cache element key DNE, url: %v", url)
@@ -58,40 +61,26 @@ func (c *Cache) reapLoop(){
 
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
-	done := make(chan bool)
 
-	for{
-		select{
-			case <-done:
-				return
-			case <-ticker.C:
-				toDelete := make([]string, len(c.structure))
-				currentTime := time.Now()
-				fmt.Printf("currentTime: %v", currentTime)
-				keys := make([]string, 0, len(c.structure))
-				for key := range c.structure {
-					keys = append(keys, key)
-				}
-				fmt.Println(keys)
-				fmt.Println()
-				for key, cacheEntryStruct := range c.structure{
-					if  currentTime.Sub(cacheEntryStruct.createdAt)  > c.interval{
-						toDelete = append(toDelete, key)
-					}
-				for _, key := range toDelete{
-					delete(c.structure, key)
-				}
-			}
+	for range ticker.C {
+		c.reap()
+	}
+}
+	
+func (c *Cache) reap(){
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	toDelete := make([]string, len(c.structure))
+	currentTime := time.Now()
+	fmt.Printf("currentTime: %v", currentTime)
+	
+	for key, cacheEntryStruct := range c.structure{
+		if  currentTime.Sub(cacheEntryStruct.createdAt)  > c.interval{
+			toDelete = append(toDelete, key)
 		}
 	}
-	
+	for _, key := range toDelete{
+		delete(c.structure, key)
+	}
+	fmt.Printf("\ncache size %v\n",len(c.structure))
 }
-// 	// for i := 0 ; i++ {
-
-// 	// }
-// 	for i:= 0; i<10; i++{
-// 		fmt.Printf("%v", ticker.C)
-// 	}
-// 	defer ticker.Stop()
-
-// }
