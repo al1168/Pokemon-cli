@@ -32,6 +32,7 @@ func (c *Client) ListLocations(pageUrl *string) (PokemonLocationStruct, error){
 		return PokemonLocationStruct{}, fmt.Errorf("error Making request, %v", error)
 	}
 	data, err := io.ReadAll(responsObject.Body)
+	defer responsObject.Body.Close()
 	if err != nil {
 		return PokemonLocationStruct{}, fmt.Errorf("fail to ioRead data, %v", err)
 	}

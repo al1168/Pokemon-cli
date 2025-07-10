@@ -23,6 +23,7 @@ func (c *Client)GetPokemonInfo(pokemonName *string) (PokemonInfo, error) {
 	}
 	var pokeinfoContainer PokemonInfo
 	data, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	if err != nil{
 		return PokemonInfo{}, fmt.Errorf("have problem reading byte into data, %v", err)
 	}

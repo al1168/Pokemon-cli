@@ -29,6 +29,7 @@ func (c *Client) ListPokemonAtLocation(pageUrl *string) (PokemonAtLocation, erro
 		return PokemonAtLocation{}, fmt.Errorf("error occured at listPokemonAtLocation making request\n error: %v", err)
 	}
 	data, err := io.ReadAll(responsObject.Body)
+	defer responsObject.Body.Close()
 	if err != nil {
 		return PokemonAtLocation{}, fmt.Errorf("error occured at listPokemonAtLocation reading res.Body\n error: %v", err)
 	}
