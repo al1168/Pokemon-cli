@@ -72,7 +72,7 @@ func (c *Cache) reap(){
 	defer c.mux.Unlock()
 	toDelete := make([]string, len(c.structure))
 	currentTime := time.Now()
-	fmt.Printf("currentTime: %v", currentTime)
+	// fmt.Printf("currentTime: %v", currentTime)
 	
 	for key, cacheEntryStruct := range c.structure{
 		if  currentTime.Sub(cacheEntryStruct.createdAt)  > c.interval{
@@ -82,5 +82,5 @@ func (c *Cache) reap(){
 	for _, key := range toDelete{
 		delete(c.structure, key)
 	}
-	fmt.Printf("\ncache size %v\n",len(c.structure))
+	// fmt.Printf("\ncache size %v\n",len(c.structure))
 }

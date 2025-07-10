@@ -7,13 +7,23 @@ import (
 	"io"
 )
 
-func (c Client) listPokemonAtLocation(pageUrl *string) (PokemonAtLocation, error){
+func (c *Client) ListPokemonAtLocation(pageUrl *string) (PokemonAtLocation, error){
 	client := c.client
-	newRequest, err := http.NewRequest("GET", *pageUrl, nil)
+	url := BASE_URL + "location-area/" + *pageUrl
+	cache := c.cache
+	cachedData, isInCache, _ := cache.Get(url)
+	var unmarshaledData PokemonAtLocation
+	if isInCache {
+		cacheErr := json.Unmarshal(cachedData, &unmarshaledData)
+		if cacheErr != nil {
+			return PokemonAtLocation{}, fmt.Errorf("error with unmarshaling cache item request: %v", cacheErr)
+		}
+		return unmarshaledData, nil
+	}
+	newRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil{
 		return PokemonAtLocation{}, fmt.Errorf("error occured creating http.NewRequest\n Error: %v", err)
 	}
-	var unmarshaledData PokemonAtLocation
 	responsObject, err := client.Do(newRequest)
 	if err !=nil{
 		return PokemonAtLocation{}, fmt.Errorf("error occured at listPokemonAtLocation making request\n error: %v", err)
