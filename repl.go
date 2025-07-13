@@ -12,22 +12,23 @@ import (
 type cliCommand struct{
 	name string 
 	description string
-	callback func(*config) error
+	callback func(*config, ...string) error
 }
 
 type config struct{
 	pokemonapiClient pokeapi.Client
 	nextURL *string
 	prevUrl *string
+	pokedex map[string]bool
 }
 
-func commandExit(*config) error{
-	fmt.Print("Closing the Pokedex... Goodbye!")
+func commandExit(c *config, args ...string) error{
+	fmt.Print("Closing the Pokedex... Goodbye!\n")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(*config) error{
+func commandHelp(c *config, args ...string) error{
 	fmt.Print(
 `Welcome to the Pokedex!
 Usage:
@@ -40,6 +41,8 @@ return nil
 
 func startRepl(){
 	scanner := bufio.NewScanner(os.Stdin)
+	// run process to clean out cache
+	// go
 	cliCommandMap:= map[string]cliCommand{
 		"exit" : {
 			name: "exit",
@@ -61,10 +64,31 @@ func startRepl(){
 			description: "Get the prev 10 Pokemon locations",
 			callback: MapCommandB,
 		},
+		"explore": {
+			name: "explore",
+			description: "Get all pokemon in an area",
+			callback: ExploreCommand,
+		},
+		"catch":{
+			name: "catch",
+			description:"catch specific pokemon",
+			callback: CatchPokemonCommand,
+		},
+		"inspect": {
+			name: "inspect",
+			description: "inspect pokemon stats and types",
+			callback: InspectCommand,
+		},
+		"pokedex": {
+			name: "pokedex",
+			description: "list all pokemon caught",
+			callback: PokedexCommand,
+		},
 	}
 	myConfig := config{
-			pokemonapiClient: pokeapi.NewClient(5 * time.Second),
-		}
+			pokemonapiClient: pokeapi.NewClient(5 * time.Second, 10 *time.Second),
+			pokedex: make(map[string]bool),
+	}
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
@@ -73,21 +97,25 @@ func startRepl(){
 		if len(cleanedInput) == 0{
 			continue
 		}
-		firstWord := cleanedInput[0]
-		fmt.Printf("First word is: %v\n", firstWord)
-		if _, ok := cliCommandMap[firstWord]; !ok{
-			fmt.Printf("Command %v not found in Map", firstWord)
+		commandWord := cleanedInput[0]
+		
+		args := []string{}
+		if len(cleanedInput) >= 2{
+			args = cleanedInput[1:]
+		}
+		fmt.Printf("First word is: %v\n", commandWord)
+		if _, ok := cliCommandMap[commandWord]; !ok{
+			fmt.Printf("Command %v not found in Map\n", commandWord)
 			continue
 		}
 		
-		command := cliCommandMap[firstWord]
+		command := cliCommandMap[commandWord]
 		callback := command.callback
-		err := callback(&myConfig)
+		err := callback(&myConfig, args...)
 		if err != nil{
-			// fmt.Errorf("there has been an err, %v", err)
-			fmt.Printf("An error occured %v", err)
-		}
-	}
+			fmt.Printf("An error occured %v\n", err)
+		} 
+	} 
 }
 func cleanInput(text string) []string {
 

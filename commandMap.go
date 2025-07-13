@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	// "net/http"
 )
-func MapCommand(c *config) error{
+func MapCommand(c *config, args...string) error{
 	client := c.pokemonapiClient
+	var err error 
+
 	responseLoc, err := client.ListLocations(c.nextURL)
 	if err != nil{
 		return fmt.Errorf("failed to get loc structd from ListLocations, error: %v", err)
