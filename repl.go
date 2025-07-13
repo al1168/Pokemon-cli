@@ -12,24 +12,23 @@ import (
 type cliCommand struct{
 	name string 
 	description string
-	callback func(*config) error
+	callback func(*config, ...string) error
 }
 
 type config struct{
 	pokemonapiClient pokeapi.Client
 	nextURL *string
 	prevUrl *string
-	userInput *string
 	pokedex map[string]bool
 }
 
-func commandExit(*config) error{
+func commandExit(c *config, args ...string) error{
 	fmt.Print("Closing the Pokedex... Goodbye!\n")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(*config) error{
+func commandHelp(c *config, args ...string) error{
 	fmt.Print(
 `Welcome to the Pokedex!
 Usage:
@@ -75,6 +74,16 @@ func startRepl(){
 			description:"catch specific pokemon",
 			callback: CatchPokemonCommand,
 		},
+		"inspect": {
+			name: "inspect",
+			description: "inspect pokemon stats and types",
+			callback: InspectCommand,
+		},
+		"pokedex": {
+			name: "pokedex",
+			description: "list all pokemon caught",
+			callback: PokedexCommand,
+		},
 	}
 	myConfig := config{
 			pokemonapiClient: pokeapi.NewClient(5 * time.Second, 10 *time.Second),
@@ -89,11 +98,11 @@ func startRepl(){
 			continue
 		}
 		commandWord := cleanedInput[0]
-		var userInput string
-		if len(cleanedInput) == 2{
-			userInput = cleanedInput[1]
+		
+		args := []string{}
+		if len(cleanedInput) >= 2{
+			args = cleanedInput[1:]
 		}
-		myConfig.userInput = &userInput
 		fmt.Printf("First word is: %v\n", commandWord)
 		if _, ok := cliCommandMap[commandWord]; !ok{
 			fmt.Printf("Command %v not found in Map\n", commandWord)
@@ -102,7 +111,7 @@ func startRepl(){
 		
 		command := cliCommandMap[commandWord]
 		callback := command.callback
-		err := callback(&myConfig)
+		err := callback(&myConfig, args...)
 		if err != nil{
 			fmt.Printf("An error occured %v\n", err)
 		} 

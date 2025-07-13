@@ -13,15 +13,13 @@ func generateCatchResult(pZero float64) bool{
 	return false // didn't catch
 }
 
-func CatchPokemonCommand(c *config) error{
-	if c.userInput == nil{
+func CatchPokemonCommand(c *config, args ...string) error{
+	
+	if len(args) == 0 {
 		return fmt.Errorf("please Input city name after Explore\nuserInput:%v",nil)
 	}
-	if c.userInput == nil {
-		return fmt.Errorf("error occured, userInput is nil in CatchPokemon")
-	}
-	pokemonName := *c.userInput
-	pokemonInfo, err := c.pokemonapiClient.GetPokemonInfo(c.userInput)
+	pokemonName := args[0]
+	pokemonInfo, err := c.pokemonapiClient.GetPokemonInfo(&pokemonName)
 	if err != nil{
 		return err
 	}
@@ -29,7 +27,7 @@ func CatchPokemonCommand(c *config) error{
 	basePokemonExperience := pokemonInfo.BaseExperience
 	chance := 1 - (float64(basePokemonExperience) /float64(UPPERBOUND))
 	isCaught := generateCatchResult(chance)
-	// fmt.Printf("This is the chance: %v base exp is: %v\n ", chance, basePokemonExperience)
+	
 	if isCaught {
 		fmt.Printf("%v was caught!\n",pokemonName)
 		c.pokedex[pokemonName] = true

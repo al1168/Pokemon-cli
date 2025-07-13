@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 )
-func MapCommand(c *config) error{
+func MapCommand(c *config, args...string) error{
 	client := c.pokemonapiClient
 	var err error 
 

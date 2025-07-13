@@ -1,16 +1,10 @@
 package main
 
 import (
-	// "encoding/json"
 	"fmt"
-	// "net/http"
-
-	// "github.com/al1168/Pokemon-cli/internal/pokeapi"
-// 	"github.com/al1168/Pokemon-cli/internal/pokeapi"
-// 	"github.com/al1168/Pokemon-cli/internal/pokecache"
 )
 
-func MapCommandB(c *config) error{
+func MapCommandB(c *config, arg ...string) error{
 	client := c.pokemonapiClient
 	var err error
 
